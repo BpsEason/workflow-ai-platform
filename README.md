@@ -385,16 +385,4 @@ exit
 
 ---
 
-## 授權協議
 
-本項目採用 [MIT 許可證](LICENSE)。詳情請見 `LICENSE` 文件。
-
----
-
-## 聯繫方式
-
-有問題或建議？請通過以下方式聯繫：
-- **GitHub Issues**：提交問題或功能請求（[點擊這裡](https://github.com/BpsEason/workflow-ai-platform/issues)）
-- **Email**：bps.eason@example.com（請替換為您的實際聯繫方式）
-
-感謝您使用 **Workflow AI Platform**！我們期待您的探索與反饋！ 🚀
