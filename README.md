@@ -1,297 +1,291 @@
 # Workflow AI Platform
 
-歡迎來到 **Workflow AI Platform**！  
-這是一個現代化的全端應用程式，旨在透過人工智慧技術簡化您的文件管理和語音互動工作流程。  
-本專案整合了 robust 的 Laravel 後端、響應迅速的 Vue 3 前端和強大的 FastAPI AI 微服務，並透過 Docker Compose 實現便捷的容器化部署。🚀
+**Workflow AI Platform** 是一個現代化的全端應用程式，旨在透過人工智慧技術簡化文件管理和語音互動工作流程。該平台整合了 Laravel 後端、Vue 3 前端和 FastAPI AI 微服務，並通過 Docker Compose 實現便捷的容器化部署。🚀
+
+本項目提供智能文件處理（上傳、摘要、語意搜尋）和 AI 語音助理功能（語音轉錄、檢索增強生成），適合需要高效管理和分析大量數據的企業或個人。
 
 ---
 
-## Project Highlights
+## 功能亮點
 
-- **全端整合**  
-  Laravel (PHP) 後端 + Vue 3 (JavaScript) 前端 + FastAPI (Python) AI 微服務
+- **全端技術棧**  
+  - 後端：Laravel (PHP) 提供穩健的 API 和認證系統  
+  - 前端：Vue 3 (JavaScript) 打造響應式用戶界面  
+  - AI 微服務：FastAPI (Python) 實現高效的 AI 處理  
 
-- **智慧文件管理**  
-  - 文件上傳與處理：支援 PDF、DOCX、TXT  
-  - AI 摘要：利用 OpenAI LLM 自動生成文件摘要  
-  - 語意搜尋：OpenAI Embedding + Qdrant 向量搜尋
+- **智能文件管理**  
+  - 支持多格式文件上傳（PDF、DOCX、TXT）  
+  - 使用 OpenAI LLM 自動生成文件摘要  
+  - 基於 OpenAI Embedding 和 Qdrant 的語意搜尋  
 
 - **AI 語音助理**  
-  - 高效語音轉錄：整合 Faster-Whisper  
-  - RAG（檢索增強生成）：結合檢索結果與問答引擎  
-  - 對話歷史：完整記錄用戶與 AI 互動
+  - 高效語音轉錄（Faster-Whisper）  
+  - 檢索增強生成（RAG）提供上下文相關的回答  
+  - 完整記錄用戶與 AI 的對話歷史  
 
-- **安全認證**  
-  Laravel Sanctum 實現 API Token 認證與 CORS 配置
+- **安全與認證**  
+  - Laravel Sanctum 實現安全的 API Token 認證  
+  - 支持跨域資源共享（CORS）  
 
-- **資料持久化**  
-  MySQL 儲存應用資料，Qdrant 作為向量資料庫
+- **數據持久化**  
+  - MySQL 用於應用數據存儲  
+  - Qdrant 作為向量數據庫支持語意搜尋  
 
 - **自動化 API 文件**  
-  Laravel Scribe 生成互動式文件
+  - Laravel Scribe 生成交互式 API 文檔  
+  - FastAPI 提供 Swagger UI 文檔  
 
 - **全面測試**  
-  Vitest、Cypress、PHPUnit 等單元／E2E 測試
+  - 前端：Vitest（單元測試）、Cypress（E2E 測試）  
+  - 後端：PHPUnit（單元測試）  
 
-- **便捷部署**  
-  一鍵 Docker Compose 啟動所有服務
+- **容器化部署**  
+  - 使用 Docker Compose 一鍵部署所有服務  
 
 ---
 
-## Project Structure
+## 系統要求
+
+- **操作系統**：Linux、macOS 或 Windows（推薦使用 WSL2 在 Windows 上）  
+- **Docker**：Docker Desktop 或 Docker Engine（版本 >= 20.10）  
+- **Docker Compose**：版本 >= 2.0  
+- **Node.js**：版本 >= 18.x（前端開發和測試）  
+- **PHP**：版本 >= 8.1（後端本地開發，僅在不使用 Docker 時需要）  
+- **Python**：版本 >= 3.9（AI 微服務本地開發，僅在不使用 Docker 時需要）  
+- **硬體**：最低 4GB RAM，推薦 8GB+（用於運行多容器）  
+- **其他**：  
+  - OpenAI API Key（用於文件摘要和語意搜尋）  
+  - 穩定的網絡連接（用於下載 Docker 鏡像和 Whisper 模型）  
+
+---
+
+## 專案結構
 
 ```text
 workflow-ai-platform/
 ├── .env.example            # 環境變數範本
 ├── Caddyfile               # Caddy 反向代理配置
-├── README.md               # 專案說明（本檔）
-├── docker-compose.yml      # 服務定義
+├── README.md               # 專案說明（本文件）
+├── docker-compose.yml      # Docker Compose 服務定義
 ├── backend/                # Laravel 後端
 │   ├── app/
-│   │   ├── Http/Controllers/  # AuthController, DocumentController, VoiceController
-│   │   └── Models/            # User, Document, Voice
-│   ├── config/scribe.php      # API 文件設定
+│   │   ├── Http/Controllers/  # 控制器：AuthController, DocumentController, VoiceController
+│   │   └── Models/            # 模型：User, Document, Voice
+│   ├── config/scribe.php      # Laravel Scribe API 文檔配置
 │   ├── database/
-│   │   ├── migrations/        # 資料表遷移
+│   │   ├── migrations/        # 資料庫遷移文件
 │   │   └── seeders/           # 假資料填充
-│   ├── nginx/                 # Nginx 設定
-│   ├── etc/supervisor/        # Supervisor 設定
-│   └── routes/api.php         # API 路由 
-├── frontend/              # Vue 3 前端
-│   ├── public/
+│   ├── nginx/                 # Nginx 配置
+│   ├── etc/supervisor/        # Supervisor 配置
+│   └── routes/api.php         # API 路由定義
+├── frontend/               # Vue 3 前端
+│   ├── public/                # 靜態資源
 │   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── router/
-│   │   ├── stores/
-│   │   ├── views/
-│   │   └── App.vue, main.js
-│   ├── cypress/               # E2E 測試 
-│   ├── package.json
-│   └── vite.config.js
-├── ai-orchestrator/       # FastAPI AI 服務 
+│   │   ├── assets/            # 圖片、CSS 等資源
+│   │   ├── components/        # Vue 組件
+│   │   ├── router/            # Vue Router 配置
+│   │   ├── stores/            # Pinia 狀態管理
+│   │   ├── views/             # 視圖頁面
+│   │   └── App.vue, main.js   # 主應用文件
+│   ├── cypress/               # Cypress E2E 測試
+│   ├── tests/unit/            # Vitest 單元測試
+│   ├── package.json           # 前端依賴與腳本
+│   └── vite.config.js         # Vite 配置
+├── ai-orchestrator/       # FastAPI AI 微服務
 │   ├── app/
-│   │   ├── services/          # document_service, rag_pipeline
-│   │   ├── models/
-│   │   └── main.py
-│   ├── data/                  # Whisper 模型儲存
-│   ├── requirements.txt
-│   └── tests/
-└── data-volumes/          # MySQL & Qdrant 資料持久化
+│   │   ├── services/          # 服務邏輯：document_service, rag_pipeline
+│   │   ├── models/            # Pydantic 模型
+│   │   └── main.py            # FastAPI 主應用
+│   ├── data/                  # Whisper 模型與臨時文件存儲
+│   ├── requirements.txt       # Python 依賴
+│   └── tests/                 # 測試文件
+└── data-volumes/          # MySQL 和 Qdrant 數據持久化目錄
 ```
 
 ---
 
-## Key Code Snippets
+## 快速開始
 
-### 1. 用戶認證 (AuthController)
-
-```php
-<?php
-
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-
-class AuthController extends Controller
-{
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user  = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'User registered successfully',
-            'token'   => $token,
-            'user'    => $user,
-        ], 201);
-    }
-}
-```
-
-### 2. 文件處理 (DocumentController)
-
-```php
-<?php
-
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Http;
-use App\Models\Document;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
-
-class DocumentController extends Controller
-{
-    public function upload(Request $request)
-    {
-        $request->validate([
-            'file'     => 'required|file|mimes:pdf,docx,txt|max:10240',
-            'category' => 'nullable|string|max:255',
-        ]);
-
-        $path     = $request->file('file')->store('documents');
-        $document = Document::create([
-            'user_id'   => $request->user()->id,
-            'name'      => $request->file('file')->getClientOriginalName(),
-            'file_path' => $path,
-            'status'    => 'pending_ai',
-            'category'  => $request->input('category'),
-        ]);
-
-        // 觸發 AI 處理
-        $aiResp = Http::post(
-            env('AI_ORCHESTRATOR_URL') . '/documents/upload',
-            ['document_id' => $document->id, 'file_path' => storage_path('app/'.$path)]
-        );
-
-        if ($aiResp->successful()) {
-            $data = $aiResp->json();
-            $document->update([
-                'summary' => $data['summary'],
-                'status'  => $data['status'],
-            ]);
-        }
-
-        return response()->json(['document' => $document], 201);
-    }
-}
-```
-
-### 3. 語音助理 (VoiceController)
-
-```php
-<?php
-
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Http;
-use App\Models\Voice;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
-
-class VoiceController extends Controller
-{
-    public function process(Request $request)
-    {
-        $request->validate([
-            'audio'   => 'required|file|mimes:mp3,wav,webm|max:10240',
-            'user_id' => 'required|string',
-        ]);
-
-        $filePath = $request->file('audio')->store('voices');
-
-        // 推送給 AI Orchestrator 轉錄
-        $transResp = Http::attach(
-            'audio_file',
-            file_get_contents(storage_path("app/{$filePath}")),
-            basename($filePath)
-        )->post(env('AI_ORCHESTRATOR_URL') . '/voice/transcribe');
-
-        $text = $transResp->json('transcribed_text');
-
-        // 取得 AI 回應
-        $aiResp = Http::post(env('AI_ORCHESTRATOR_URL') . '/voice/respond', [
-            'user_id'             => $request->user_id,
-            'prompt'              => $text,
-            'conversation_history' => Voice::where('user_id', $request->user_id)
-                                            ->pluck('text','speaker')
-                                            ->toArray(),
-        ]);
-
-        return response()->json([
-            'transcribed_text' => $text,
-            'response_text'    => $aiResp->json('response_text'),
-        ]);
-    }
-}
-```
-
----
-
-## Quick Start
+### 1. 克隆專案
 
 ```bash
-# 1. 複製環境變數範本
-cp .env.example .env
-# 編輯 .env，設定 OPENAI_API_KEY
+git clone <repository-url>
+cd workflow-ai-platform
+```
 
-# 2. 構建並啟動所有服務
+### 2. 配置環境變數
+
+```bash
+cp .env.example .env
+```
+
+編輯 `.env` 文件，設置以下關鍵變數：
+- `OPENAI_API_KEY`：您的 OpenAI API Key（必須）
+- `WHISPER_MODEL`：Faster-Whisper 模型（預設 `tiny`，可選 `base`, `small`, `medium`, `large-v2`, `large-v3`）
+- `AI_ORCHESTRATOR_URL`：AI 微服務地址（預設 `http://ai-orchestrator:8001`）
+
+### 3. 啟動服務
+
+```bash
+# 構建並啟動所有 Docker 容器
 docker compose build
 docker compose up -d
+```
 
-# 3. 後端初始化
+### 4. 初始化 Laravel 後端
+
+```bash
+# 進入後端容器
 docker exec -it workflow-ai-backend bash
-php artisan key:generate
-php artisan migrate
-php artisan db:seed
-php artisan scribe:generate
-exit
 
-# 4. （可選）使用 Caddy 作為反向代理
+# 生成應用密鑰
+php artisan key:generate
+
+# 執行資料庫遷移
+php artisan migrate
+
+# （可選）填充假數據
+php artisan db:seed
+
+# 生成 API 文檔
+php artisan scribe:generate
+
+exit
+```
+
+### 5. （可選）設置 Caddy 反向代理
+
+若需要統一入口點，可以使用 Caddy：
+
+```bash
+# 安裝 Caddy（請參考 https://caddyserver.com/docs/install）
 caddy run --config Caddyfile
 ```
 
----
+### 6. 訪問應用
 
-## 訪問地址
-
-- **前端應用**：http://localhost:5173  
-- **Laravel API**：http://localhost:8000/api  
-- **FastAPI Swagger**：http://localhost:8001/docs  
-- **Laravel Scribe Docs**：http://localhost:8000/docs  
-
----
-
-## Running Tests
-
-- **前端單元測試 (Vitest)**  
-  ```bash
-  cd frontend
-  npm test
-  ```
-
-- **前端 E2E 測試 (Cypress)**  
-  ```bash
-  cd frontend
-  npm run cypress:open
-  # or
-  npm run cypress:run
-  ```
-
-- **後端 PHPUnit**  
-  ```bash
-  docker exec -it workflow-ai-backend bash
-  vendor/bin/phpunit
-  exit
-  ```
+- **前端應用**：`http://localhost:5173`
+- **Laravel API**：`http://localhost:8000/api`
+- **FastAPI Swagger 文檔**：`http://localhost:8001/docs`
+- **Laravel Scribe 文檔**：`http://localhost:8000/docs`
+- **Caddy 代理（若啟用）**：
+  - 前端：`http://localhost:8081`
+  - 後端：`http://localhost:8080`
+  - AI 微服務：`http://localhost:8082`
 
 ---
 
-## Development Notes
+## API 文檔
 
-- **OpenAI API Key**：必須在 `.env` 中設定 `OPENAI_API_KEY`  
-- **Faster-Whisper**：首次運行會自動下載（預設 `tiny`），可修改 `WHISPER_MODEL` 參數  
-- **Sanctum & CORS**：`.env.example` 已配置 `SANCTUM_STATEFUL_DOMAINS`、`SESSION_DOMAIN`  
-- **路由守衛**：Vue 前端對 `/documents`、`/voice` 路由進行保護，未登入自動重定向  
+### Laravel API（後端）
 
-Enjoy exploring your new **Workflow AI Platform**! 🚀
+- **訪問地址**：`http://localhost:8000/docs`
+- **生成方式**：運行 `php artisan scribe:generate`
+- **功能**：提供認證、文件管理和語音處理的 API 端點，包含範例請求和響應。
+
+### FastAPI（AI 微服務）
+
+- **訪問地址**：`http://localhost:8001/docs`
+- **功能**：提供文件向量化、語意搜尋、語音轉錄和 RAG 回應的 API 端點。
+
+---
+
+## 運行測試
+
+### 前端測試
+
+1. **單元測試（Vitest）**
+
+```bash
+cd frontend
+npm install
+npm test
+# 或監聽文件變化
+npm run test:watch
+```
+
+2. **E2E 測試（Cypress）**
+
+為文件上傳測試準備一個假 PDF 文件（例如 `test_pdf.pdf`）並放置在 `frontend/cypress/fixtures/` 目錄下。
+
+```bash
+cd frontend
+npm install
+# 打開 Cypress UI
+npm run cypress:open
+# 或運行無頭模式
+npm run cypress:run
+```
+
+### 後端測試
+
+```bash
+docker exec -it workflow-ai-backend bash
+vendor/bin/phpunit
+exit
+```
+
+---
+
+## 開發筆記
+
+- **OpenAI API Key**：必須在 `.env` 中設置 `OPENAI_API_KEY`，否則 AI 功能（摘要、語意搜尋）將無法運行。
+- **Faster-Whisper 模型**：首次運行時會自動下載模型，存儲於 `ai-orchestrator/data/whisper_models/`。可通過 `.env` 中的 `WHISPER_MODEL` 參數選擇不同模型（更大的模型精度更高，但需要更多資源）。
+- **CORS 配置**：`.env` 中的 `SANCTUM_STATEFUL_DOMAINS` 和 `SESSION_DOMAIN` 已預設為 `localhost:5173` 和 `localhost`，確保前端與後端的跨域請求正常。
+- **路由保護**：前端的 `/documents` 和 `/voice` 路由受保護，未登錄用戶將被重定向至登錄頁面。
+- **日誌**：後端使用 Laravel 的日誌系統（`storage/logs`），AI 微服務使用 Python 的日誌（控制台輸出）。
+
+---
+
+## 故障排除
+
+- **問題**：`OPENAI_API_KEY` 未設置導致 AI 功能失敗  
+  **解決方案**：檢查 `.env` 文件，確保已設置有效的 OpenAI API Key。
+
+- **問題**：Docker 容器啟動失敗  
+  **解決方案**：
+  - 檢查 Docker 是否運行：`docker info`
+  - 確保端口未被占用：`8000`, `8001`, `5173`, `3306`, `6333`, `6334`
+  - 查看容器日誌：`docker logs <container_name>`
+
+- **問題**：Cypress 測試無法上傳文件  
+  **解決方案**：確保 `frontend/cypress/fixtures/test_pdf.pdf` 存在，可使用任意空白 PDF 文件。
+
+- **問題**：語音轉錄失敗  
+  **解決方案**：
+  - 檢查 `WHISPER_MODEL` 是否設置為支持的模型。
+  - 確保 `ai-orchestrator` 容器正常運行：`docker ps`
+  - 檢查日誌：`docker logs workflow-ai-ai-orchestrator`
+
+---
+
+## 貢獻指南
+
+我們歡迎任何形式的貢獻！請按照以下步驟參與：
+
+1. Fork 本倉庫並克隆到本地。
+2. 創建一個新分支：`git checkout -b feature/your-feature-name`
+3. 提交更改：`git commit -m "Add your feature description"`
+4. 推送到遠端：`git push origin feature/your-feature-name`
+5. 在 GitHub 上提交 Pull Request，並詳細描述您的更改。
+
+請確保：
+- 代碼遵循項目現有的編碼規範（PSR-12 for PHP, ESLint for JavaScript）。
+- 所有測試通過（Vitest, Cypress, PHPUnit）。
+- 更新相關文檔（例如本 README 或 API 文檔）。
+
+---
+
+## 授權協議
+
+本項目採用 [MIT 許可證](LICENSE)。詳情請見 `LICENSE` 文件。
+
+---
+
+## 聯繫我們
+
+有問題或建議？請通過以下方式聯繫：
+- **GitHub Issues**：提交問題或功能請求
+- **Email**：support@example.com（請替換為實際聯繫方式）
+
+感謝您使用 **Workflow AI Platform**！我們期待您的探索與反饋！ 🚀
