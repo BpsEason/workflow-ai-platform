@@ -44,11 +44,11 @@ Workflow AI Platform歡迎來到 Workflow AI Platform！這是一個現代化的
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Hash; // 正確的命名空間
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log; // 引入 Log Facade
 
 /**
  * @group Authentication
@@ -65,11 +65,20 @@ class AuthController extends Controller
      * @bodyParam email string required 用戶的 Email 地址，必須是唯一的。Example: john@example.com
      * @bodyParam password string required 用戶密碼，至少8個字符，且需要與 password_confirmation 匹配。Example: password123
      * @bodyParam password_confirmation string required 確認用戶密碼。Example: password123
+     * @response {
+     * "message": "User registered successfully",
+     * "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     * "user": {"id": 1, "name": "John Doe", "email": "john@example.com"}
+     * }
+     * @response 422 {
+     * "message": "註冊驗證失敗",
+     * "errors": {"email": ["The email has already been taken."]}
+     * }
      */
     public function register(Request $request)
     {
         try {
-            // 驗證輸入數據
+            // 驗證輸入數據（電子郵件、密碼、名稱）
             $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users', // Email 必須唯一
@@ -80,7 +89,7 @@ class AuthController extends Controller
             return response()->json(['message' => '註冊驗證失敗', 'errors' => $e->errors()], 422);
         }
 
-        // 創建新用戶
+        // 創建新用戶，密碼使用 Hash 加密
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -104,29 +113,42 @@ class AuthController extends Controller
      * 驗證用戶憑證並返回 Sanctum API Token。
      * @bodyParam email string required 用戶的 Email 地址。Example: john@example.com
      * @bodyParam password string required 用戶密碼。Example: password123
+     * @response {
+     * "message": "Login successful",
+     * "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     * "user": {"id": 1, "name": "John Doe", "email": "john@example.com"}
+     * }
+     * @response 401 {
+     * "message": "Invalid credentials"
+     * }
+     * @response 422 {
+     * "message": "登入驗證失敗",
+     * "errors": {"email": ["The email field is required."]}
+     * }
      */
     public function login(Request $request)
     {
         try {
-            // 驗證輸入數據
-            $request->validate([
-                'email' => 'required|string|email',
-                'password' => 'required|string',
+            // 驗證登入憑證
+            $credentials = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required',
             ]);
         } catch (ValidationException $e) {
             Log::error('登入驗證失敗: ' . json_encode($e->errors()));
             return response()->json(['message' => '登入驗證失敗', 'errors' => $e->errors()], 422);
         }
 
-        // 嘗試使用 Email 和密碼進行認證
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        // 嘗試認證用戶
+        if (!Auth::attempt($credentials)) {
+            // 認證失敗，返回 401 錯誤
             Log::warning("登入嘗試失敗：無效的憑證，Email: {$request->email}");
-            return response()->json(['message' => 'Invalid credentials'], 401); // 認證失敗返回 401 Unauthorized
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        // 獲取認證後的用戶實例
-        $user = $request->user();
-        // 為用戶創建新的 Sanctum API Token
+        // 獲取當前用戶
+        $user = Auth::user();
+        // 生成新 Token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         Log::info("用戶 {$user->email} 登入成功。");
@@ -137,18 +159,59 @@ class AuthController extends Controller
         ]);
     }
 
-    // ... (logout 和 user 方法也在此控制器中，邏輯類似)
+    /**
+     * 用戶登出。
+     *
+     * 撤銷當前認證用戶的所有 Sanctum Token。
+     * @authenticated
+     * @response {
+     * "message": "Successfully logged out"
+     * }
+     * @response 401 {
+     * "message": "Unauthenticated."
+     * }
+     */
+    public function logout(Request $request)
+    {
+        // 撤銷當前 Token
+        // $request->user() 取得認證用戶實例，currentAccessToken() 取得當前使用的 Token
+        $request->user()->currentAccessToken()->delete(); 
+        Log::info("用戶 {$request->user()->email} 登出成功。");
+        return response()->json(['message' => 'Successfully logged out']);
+    }
+
+    /**
+     * 獲取認證用戶信息。
+     *
+     * 返回當前認證用戶的詳細信息。
+     * @authenticated
+     * @response {
+     * "id": 1,
+     * "name": "John Doe",
+     * "email": "john@example.com",
+     * "email_verified_at": "2023-01-01T00:00:00.000000Z",
+     * "created_at": "2023-01-01T00:00:00.000000Z",
+     * "updated_at": "2023-01-01T00:00:00.000000Z"
+     * }
+     * @response 401 {
+     * "message": "Unauthenticated."
+     * }
+     */
+    public function user(Request $request)
+    {
+        return $request->user();
+    }
 }
 2. 文件處理 - backend/app/Http/Controllers/DocumentController.php此控制器負責接收文件上傳，將其儲存，然後觸發 AI 微服務進行深度處理（向量化和摘要）。<?php
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support->Facades\Storage;
-use Illuminate->Support->Facades\Http; // 用於發送 HTTP 請求到 AI Orchestrator
+use Illuminate\Support\Facades\Storage; // 正確的命名空間
+use Illuminate\Support\Facades\Http; // 用於發送 HTTP 請求到 AI Orchestrator
 use App\Models\Document;
 use Illuminate\Validation\ValidationException;
-use Illuminate->Support->Facades\Log;
+use Illuminate\Support\Facades\Log; // 引入 Log Facade
 
 /**
  * @group Document Management
@@ -162,8 +225,11 @@ class DocumentController extends Controller
      *
      * 允許用戶上傳文件 (PDF, DOCX, TXT)，文件將被儲存，並觸發 AI 微服務進行向量化和摘要。
      * @authenticated
-     * @bodyParam file file required The file to upload (max 10MB, allowed types: pdf, doc, docx, txt).
+     * @bodyParam file file required The file to upload (max 10MB, allowed types: pdf, doc, docx, txt). Example: (binary file)
      * @bodyParam category string The category of the document. Example: "Policy"
+     * @responseFile status=201 scenarios/document_upload_success.json
+     * @responseFile status=422 scenarios/document_upload_validation_error.json
+     * @responseFile status=500 scenarios/document_upload_ai_error.json
      */
     public function upload(Request $request)
     {
@@ -193,7 +259,7 @@ class DocumentController extends Controller
             'category' => $request->input('category')
         ]);
 
-        Log::info("文件 {$document->id} 已上傳，準備發送至 AI Orchestrator。");
+        Log::info("文件 {$document->id} 已上傳，路徑: {$path}，準備發送至 AI Orchestrator。");
 
         try {
             // 向 AI Orchestrator 微服務發送 HTTP POST 請求，觸發文件處理
@@ -240,19 +306,61 @@ class DocumentController extends Controller
             'ai_response' => $ai_result ?? null
         ], 201);
     }
-    
-    // ... (search 方法也在此控制器中，邏輯類似)
+
+    /**
+     * 語意搜尋文件。
+     *
+     * 根據用戶提供的自然語言查詢，透過 AI 微服務進行語意搜尋，返回相關文件片段。
+     *
+     * @authenticated
+     * @queryParam q string required 搜尋查詢內容。Example: "蘋果公司的最新財報"
+     * @responseFile status=200 scenarios/document_search_success.json
+     * @responseFile status=422 scenarios/document_search_validation_error.json
+     * @responseFile status=500 scenarios/document_search_ai_error.json
+     */
+    public function search(Request $request)
+    {
+        try {
+            $request->validate([
+                'q' => 'required|string|min:2|max:500'
+            ]);
+        } catch (ValidationException $e) {
+            Log::error('文件搜尋驗證失敗: ' . json_encode($e->errors()));
+            return response()->json(['message' => '搜尋查詢驗證失敗', 'errors' => $e->errors()], 422);
+        }
+
+        $query = $request->get('q');
+        Log::info("收到文件搜尋請求: query='{$query}'");
+
+        try {
+            $response = Http::get(env('AI_ORCHESTRATOR_URL') . '/documents/search', ['query' => $query]);
+
+            if ($response->successful()) {
+                Log::info("AI Orchestrator 搜尋成功。");
+                return response()->json($response->json());
+            } else {
+                Log::error("AI Orchestrator 搜尋失敗。錯誤: " . $response->body());
+                return response()->json(['message' => '文件搜尋失敗', 'error' => $response->body()], $response->status());
+            }
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            Log::error("連接 AI Orchestrator 失敗 (搜尋請求)。錯誤: " . $e->getMessage());
+            return response()->json(['message' => '無法連接AI服務進行搜尋', 'error' => $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            Log::error("AI Orchestrator 搜尋時發生未知錯誤。錯誤: " . $e->getMessage());
+            return response()->json(['message' => 'AI搜尋服務異常', 'error' => $e->getMessage()], 500);
+        }
+    }
 }
 3. 語音助理 - backend/app/Http/Controllers/VoiceController.php此控制器處理語音輸入，將其發送給 AI 微服務進行轉錄和回應生成，並管理對話歷史。<?php
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support->Facades->Storage;
-use Illuminate->Support->Facades->Http;
+use Illuminate\Support\Facades\Storage; // 正確的命名空間
+use Illuminate\Support\Facades\Http;
 use App\Models\Voice;
-use Illuminate->Validation\ValidationException;
-use Illuminate->Support->Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log; // 引入 Log Facade
 
 /**
  * @group Voice Assistant
@@ -265,9 +373,13 @@ class VoiceController extends Controller
      * 處理語音輸入。
      *
      * 接收語音文件，將其發送至 AI 微服務進行轉錄，然後使用轉錄文本獲取 AI 回應，並儲存對話歷史。
+     *
      * @authenticated
-     * @bodyParam audio file required The audio file to process (max 10MB, allowed types: mp3, wav, ogg, webm).
+     * @bodyParam audio file required The audio file to process (max 10MB, allowed types: mp3, wav, ogg, webm). Example: (binary file)
      * @bodyParam user_id string required The ID of the user. This should ideally come from an authenticated user. Example: "user_uuid_123"
+     * @responseFile status=200 scenarios/voice_process_success.json
+     * @responseFile status=422 scenarios/voice_process_validation_error.json
+     * @responseFile status=500 scenarios/voice_process_ai_error.json
      */
     public function process(Request $request)
     {
@@ -362,13 +474,30 @@ class VoiceController extends Controller
         }
     }
 
-    // ... (history 方法也在此控制器中，邏輯類似)
+    /**
+     * 獲取對話歷史。
+     *
+     * 獲取特定用戶的語音對話歷史記錄。
+     *
+     * @authenticated
+     * @urlParam user_id string required 用戶的 ID。Example: "user_uuid_123"
+     * @responseFile status=200 scenarios/voice_history_success.json
+     */
+    public function history(Request $request, string $userId)
+    {
+        Log::info("收到獲取語音對話歷史請求，用戶ID: {$userId}");
+        $history = Voice::where('user_id', $userId)
+                        ->orderBy('created_at', 'asc')
+                        ->get(['speaker', 'text', 'created_at']);
+
+        return response()->json($history);
+    }
 }
 4. 資料庫遷移 - backend/database/migrations/遷移文件定義了資料庫表的結構。*_create_documents_table.php<?php
 
-use Illuminate->Database->Migrations->Migration;
-use Illuminate->Database->Schema->Blueprint;
-use Illuminate->Support->Facades->Schema;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -399,9 +528,9 @@ return new class extends Migration
 };
 *_create_voices_table.php<?php
 
-use Illuminate->Database->Migrations->Migration;
-use Illuminate->Database->Schema->Blueprint;
-use Illuminate->Support->Facades->Schema;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -532,6 +661,7 @@ async def summarize_document(document_id: int, text_content: str) -> str:
     except Exception as e:
         logger.error(f"文件 {document_id} 摘要失敗 (LLM 錯誤): {e}", exc_info=True)
         return "無法生成摘要。"
+
 2. RAG 回應生成 - ai-orchestrator/app/services/rag_pipeline.py此服務實現了 RAG 流程，結合檢索到的文件內容和對話歷史來生成更準確的回應。import os
 import logging
 from dotenv import load_dotenv
@@ -637,6 +767,7 @@ async def generate_response_from_rag(user_id: str, prompt: str, conversation_his
     except Exception as e:
         logger.error(f"RAG 回應生成失敗 (LLM 或檢索錯誤): {e}", exc_info=True)
         return "很抱歉，我無法生成基於內部資料的回應。請嘗試換個問題或稍後再試。"
+
 3. 語音轉錄 - ai-orchestrator/app/main.py這是 FastAPI 應用程序的入口文件，包含語音轉錄 API。import io
 import os
 import logging
@@ -712,6 +843,7 @@ async def transcribe_voice(audio_file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"語音轉錄失敗: {e}")
 
 # ... (其他文件和語音相關的 API 路由也在此文件中定義)
+
 C. 前端服務 (Vue3)前端應用程式使用 Vue3 和 Pinia 構建，提供直觀的用戶界面。1. 認證狀態管理 - frontend/src/stores/auth.js使用 Pinia 管理用戶認證狀態和 API Token。import { defineStore } from 'pinia';
 import axios from 'axios'; // 使用 axios 進行 HTTP 請求
 
@@ -836,7 +968,6 @@ export const useAuthStore = defineStore('auth', {
     }
   },
 });
-
 2. 文件上傳組件核心邏輯 - frontend/src/views/DocumentsView.vue此組件允許用戶上傳文件並顯示處理狀態和搜尋結果。<template>
   <div class="max-w-4xl mx-auto p-4 bg-white shadow-lg rounded-lg">
     <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">文件智慧管理系統</h1>
@@ -1221,6 +1352,7 @@ button:disabled {
   cursor: not-allowed;
 }
 </style>
+
 ⚡ 快速啟動 (Quick Start)請確保您的系統已安裝 Docker 和 Docker Compose。進入專案目錄：cd workflow-ai-platform
 配置環境變數：複製 .env.example 為 .env，然後打開 .env 檔案，務必填寫您的 OPENAI_API_KEY。cp .env.example .env
 # 打開 .env 檔案並填寫 OPENAI_API_KEY
