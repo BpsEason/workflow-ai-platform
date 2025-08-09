@@ -1,0 +1,16 @@
+fastapi~=0.109.0
+uvicorn[standard]~=0.27.0
+qdrant-client~=1.7.0
+langchain~=0.1.0 # LangChain 核心
+langchain-community~=0.0.18 # LangChain 社區集成
+langchain-openai~=0.0.5 # OpenAI 整合
+openai~=1.10.0 # OpenAI Python 客戶端
+python-dotenv~=1.0.1 # 用於環境變數
+python-multipart~=0.0.6 # 用於文件上傳
+pytest~=7.4.0 # For testing
+pytest-asyncio~=0.21.0 # For async tests
+httpx~=0.26.0 # For async HTTP client in tests
+faster-whisper~=0.11.0 # 語音轉錄
+# pypdf # 如果需要處理 PDF 文件
+# python-docx # 如果需要處理 DOCX 文件
+# pydub # 處理音頻文件

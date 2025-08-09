@@ -1,0 +1,9 @@
+{
+    "message": "語音文件驗證失敗",
+    "errors": {
+        "audio": [
+            "The audio field is required.",
+            "The audio must be a file of type: mp3, wav, ogg, webm."
+        ]
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "message": "文件已上傳並發送至AI處理",
+    "document": {
+        "user_id": 1,
+        "name": "公司年度報告.pdf",
+        "file_path": "documents/hashname.pdf",
+        "summary": "這是一份關於公司年度營運的摘要。",
+        "status": "processed_ai",
+        "category": "Report",
+        "updated_at": "2023-10-27T08:00:00.000000Z",
+        "created_at": "2023-10-27T08:00:00.000000Z",
+        "id": 1
+    },
+    "ai_response": {
+        "document_id": 1,
+        "summary": "這是一份關於公司年度營運的摘要。",
+        "status": "processed"
+    }
+}

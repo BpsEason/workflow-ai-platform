@@ -1,0 +1,4 @@
+{
+    "message": "AI 回應生成失敗",
+    "error": "AI Orchestrator encountered an error during transcription or response generation."
+}

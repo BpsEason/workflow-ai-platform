@@ -1,0 +1,23 @@
+{
+    "query": "最新的市場趨勢分析",
+    "results": [
+        {
+            "score": 0.8975,
+            "document_id": 5,
+            "text_chunk": "2023年第三季度市場趨勢顯示，AI相關產業增長強勁。",
+            "metadata": {
+                "original_name": "市場分析報告 Q3.pdf",
+                "category": "Report"
+            }
+        },
+        {
+            "score": 0.8521,
+            "document_id": 12,
+            "text_chunk": "我們預計明年人工智能技術將帶來新的增長點，尤其是在自動化領域。",
+            "metadata": {
+                "original_name": "未來技術展望.txt",
+                "category": "Strategy"
+            }
+        }
+    ]
+}

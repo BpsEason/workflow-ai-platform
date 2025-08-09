@@ -1,0 +1,4 @@
+{
+    "message": "文件上傳成功，但AI處理失敗",
+    "error": "Failed to connect to AI Orchestrator or AI processing error."
+}

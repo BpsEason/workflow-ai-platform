@@ -1,0 +1,9 @@
+{
+    "message": "文件驗證失敗",
+    "errors": {
+        "file": [
+            "The file field is required.",
+            "The file must be a file of type: pdf, doc, docx, txt."
+        ]
+    }
+}

@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # Laravel 後端服務
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: workflow-ai-backend
+    restart: unless-stopped
+    ports:
+      - "8000:80" # 映射到主機的 8000 端口
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/nginx/default.conf:/etc/nginx/http.d/default.conf # 映射 Nginx 配置
+      - ./backend/etc/supervisor/conf.d/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf # 映射 Supervisor 配置
+    depends_on:
+      - database
+      - ai-orchestrator
+    environment:
+      # Laravel 環境變數
+      - APP_NAME=Laravel Workflow AI
+      - APP_ENV=local
+      - APP_KEY=base64:YOUR_APP_KEY_HERE # 在運行 `php artisan key:generate` 後會自動更新
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8000
+
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=debug
+
+      - DB_CONNECTION=mysql
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_DATABASE=laravel_workflow_ai
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+
+      - BROADCAST_DRIVER=log
+      - CACHE_DRIVER=file
+      - QUEUE_CONNECTION=sync
+      - SESSION_DRIVER=file
+      - SESSION_LIFETIME=120
+      - SESSION_ENCRYPT=false
+
+      # Sanctum Statefull Domains for CORS
+      - SANCTUM_STATEFUL_DOMAINS=localhost:5173
+      - SESSION_DOMAIN=localhost
+
+      - AI_ORCHESTRATOR_URL=http://ai-orchestrator:8001 # AI 微服務的內部 Docker 網路地址
+    # command: sh -c "php artisan optimize:clear && supervisord -c /etc/supervisor/conf.d/supervisord.conf" # 由 Dockerfile CMD 處理
+
+  # Vue3 前端服務
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: workflow-ai-frontend
+    ports:
+      - "5173:5173" # 映射到主機的 5173 端口
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # 防止 host volume 覆蓋 node_modules
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:8000/api # 前端呼叫後端的地址，在瀏覽器端使用
+    command: npm run dev -- --host 0.0.0.0 # 確保 Vite 在 Docker 內正確監聽所有介面
+
+  # FastAPI AI 微服務
+  ai-orchestrator:
+    build:
+      context: ./ai-orchestrator
+      dockerfile: Dockerfile
+    container_name: workflow-ai-ai-orchestrator
+    restart: unless-stopped
+    ports:
+      - "8001:8001" # 映射到主機的 8001 端口
+    volumes:
+      - ./ai-orchestrator:/app
+      - ./ai-orchestrator/data:/app/data # 用於儲存 Whisper 模型或臨時文件
+    depends_on:
+      - qdrant
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - OPENAI_API_KEY=${OPENAI_API_KEY} # 從根目錄的 .env 讀取
+      - WHISPER_MODEL=${WHISPER_MODEL}
+      - WHISPER_DEVICE=${WHISPER_DEVICE}
+      - WHISPER_COMPUTE_TYPE=${WHISPER_COMPUTE_TYPE}
+
+  # Qdrant 向量資料庫
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: workflow-ai-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333" # Qdrant API
+      - "6334:6334" # Qdrant gRPC
+    volumes:
+      - ./qdrant_data:/qdrant/storage # 將數據持久化到主機目錄
+
+  # MySQL 資料庫 (用於 Laravel)
+  database:
+    image: mysql:8.0
+    container_name: workflow-ai-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306" # 映射到主機的 3306 端口
+    volumes:
+      - ./db_data:/var/lib/mysql # 將數據持久化到主機目錄
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=laravel_workflow_ai
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+    command: --default-authentication-plugin=mysql_native_password

@@ -1,0 +1,38 @@
+# This Caddyfile demonstrates basic reverse proxying for local development.
+# You would run Caddy separately, for example: `caddy run --config Caddyfile`
+# Then access your services via Caddy's configured ports.
+
+# Frontend Service (Vue3)
+# Access at http://localhost:8081
+:8081 {
+    reverse_proxy localhost:5173 {
+        # Optional: Add headers if frontend expects them for CORS
+        header_up Host {http.request.host}
+        header_up X-Real-IP {remote_ip}
+        header_up X-Forwarded-For {remote_ip}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# Backend Service (Laravel)
+# Access at http://localhost:8080
+:8080 {
+    reverse_proxy localhost:8000 {
+        # Laravel needs these headers for correct request parsing (especially for file uploads)
+        header_up Host {http.request.host}
+        header_up X-Real-IP {remote_ip}
+        header_up X-Forwarded-For {remote_ip}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# AI Orchestrator Service (FastAPI)
+# Access at http://localhost:8082
+:8082 {
+    reverse_proxy localhost:8001 {
+        header_up Host {http.request.host}
+        header_up X-Real-IP {remote_ip}
+        header_up X-Forwarded-For {remote_ip}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}

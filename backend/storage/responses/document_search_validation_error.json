@@ -1,0 +1,8 @@
+{
+    "message": "搜尋查詢驗證失敗",
+    "errors": {
+        "q": [
+            "The q field is required."
+        ]
+    }
+}
